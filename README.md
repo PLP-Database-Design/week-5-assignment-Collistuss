@@ -97,3 +97,96 @@ Create a ```GET``` endpoint that retrieves all providers by their specialty
 
 
 ## NOTE: Do not fork this repository
+const express = require('express');
+const mysql = require('mysql2');
+const dotenv = require('dotenv');
+
+// Load environment variables
+dotenv.config();
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Database connection setup
+const db = mysql.createConnection({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USERNAME,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME
+});
+
+db.connect((err) => {
+    if (err) {
+        console.error('Database connection failed:', err);
+        return;
+    }
+    console.log('Connected to database');
+});
+
+// Endpoint to retrieve all patients
+app.get('/patients', (req, res) => {
+    db.query('SELECT patient_id, first_name, last_name, date_of_birth FROM patients', (err, results) => {
+        if (err) {
+            res.status(500).send(err);
+        } else {
+            res.json(results);
+        }
+    });
+});
+
+// Endpoint to retrieve all providers
+app.get('/providers', (req, res) => {
+    db.query('SELECT first_name, last_name, provider_specialty FROM providers', (err, results) => {
+        if (err) {
+            res.status(500).send(err);
+        } else {
+            res.json(results);
+        }
+    });
+});
+
+// Endpoint to filter patients by first name
+app.get('/patients/:first_name', (req, res) => {
+    const firstName = req.params.first_name;
+    db.query('SELECT * FROM patients WHERE first_name = ?', [firstName], (err, results) => {
+        if (err) {
+            res.status(500).send(err);
+        } else {
+            res.json(results);
+        }
+    });
+});
+
+// Endpoint to retrieve all providers by specialty
+app.get('/providers/specialty/:specialty', (req, res) => {
+    const specialty = req.params.specialty;
+    db.query('SELECT * FROM providers WHERE provider_specialty = ?', [specialty], (err, results) => {
+        if (err) {
+            res.status(500).send(err);
+        } else {
+            res.json(results);
+        }
+    });
+});
+
+// Start the server
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+});
+DB_USERNAME=root
+DB_HOST=localhost
+DB_PASSWORD=your_password
+DB_NAME=hospital_db
+CREATE TABLE patients (
+    patient_id INT PRIMARY KEY AUTO_INCREMENT,
+    first_name VARCHAR(50),
+    last_name VARCHAR(50),
+    date_of_birth DATE
+);
+CREATE TABLE providers (
+    provider_id INT PRIMARY KEY AUTO_INCREMENT,
+    first_name VARCHAR(50),
+    last_name VARCHAR(50),
+    provider_specialty VARCHAR(50)
+);
+node server.js
